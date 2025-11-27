@@ -5,7 +5,7 @@ import re  # Thêm thư viện xử lý văn bản
 
 # --- CẤU HÌNH ---
 # THẦY NHỚ DÁN LẠI API KEY CỦA THẦY VÀO DƯỚI ĐÂY NHÉ
-API_KEY = "AIzaSyDny9p_BG-IQwvNGtU2yHpHsXM0GfdMfx0" 
+API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 genai.configure(api_key=API_KEY)
 
@@ -64,4 +64,5 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
         st.session_state.messages.append({"role": "assistant", "content": clean_text})
         
     except Exception as e:
+
         st.error(f"Lỗi kết nối: {e}")

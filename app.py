@@ -7,48 +7,31 @@ import os
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(page_title="Trợ Lý Lịch Sử", page_icon="📜", layout="centered")
 
-# --- CSS "HẠT NHÂN" ĐỂ ẨN MỌI THỨ ---
+# --- CSS "HẠT NHÂN" VERSION CUỐI CÙNG ---
 hide_elements = """
 <style>
-    /* Ẩn Header (cái vạch màu trên cùng) */
-    header[data-testid="stHeader"] {
-        visibility: hidden;
-        height: 0%;
-    }
-    
-    /* Ẩn Decoration (vạch màu cầu vồng) */
-    div[data-testid="stDecoration"] {
-        visibility: hidden;
-        height: 0%;
+    /* 1. Ẩn Header và Toolbar (Nơi chứa nút 3 gạch) */
+    header, [data-testid="stToolbar"] {
+        visibility: hidden !important;
+        display: none !important;
+        height: 0px !important;
     }
 
-    /* Ẩn Toolbar (Nút 3 gạch và nút Manage App) */
-    div[data-testid="stToolbar"] {
-        visibility: hidden;
-        display: none;
+    /* 2. Ẩn Footer và Decoration */
+    footer, [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+        visibility: hidden !important;
+        display: none !important;
     }
 
-    /* Ẩn Footer (Dòng Made with Streamlit) */
-    footer {
-        visibility: hidden;
-        display: none;
-    }
-
-    /* Ẩn nút Deploy (nếu còn sót) */
-    .stDeployButton {
-        visibility: hidden;
-        display: none;
-    }
-    
-    /* Ẩn thanh trạng thái góc trên bên phải */
-    div[data-testid="stStatusWidget"] {
-        visibility: hidden;
-    }
-    
-    /* Chỉnh lề trên cùng để web sát lên trên sau khi ẩn header */
+    /* 3. Đẩy nội dung lên sát mép trên (vì đã ẩn header) */
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+    }
+    
+    /* 4. Xử lý riêng cho nút Deploy/Manage (Vương miện) */
+    /* Lưu ý: Chủ sở hữu vẫn có thể thấy mờ mờ để quản trị, nhưng khách sẽ không thấy */
+    .stDeployButton {
+        display: none !important;
     }
 </style>
 """
@@ -88,7 +71,6 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
             response = model.generate_content(prompt)
             raw_text = response.text
             
-            # Xử lý lọc ảnh
             image_prompts = re.findall(r'\[(.*?)\]', raw_text)
             final_image_prompt = image_prompts[-1] if image_prompts else ""
             clean_text = re.sub(r'\[.*?\]', '', raw_text).strip()
@@ -100,7 +82,6 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
                 st.markdown(f"**🖼️ Minh họa:**")
                 st.image(f"https://image.pollinations.ai/prompt/{final_image_prompt.replace(' ', '%20')}?width=1024&height=768&nologo=true")
             
-            # Tạo Audio (Dùng tên ngẫu nhiên để tránh cache nếu cần, ở đây dùng temp)
             tts = gTTS(text=clean_text, lang='vi')
             tts.save("temp_audio.mp3")
             st.audio("temp_audio.mp3")

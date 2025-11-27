@@ -7,12 +7,25 @@ import os
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(page_title="Trợ Lý Lịch Sử", page_icon="📜", layout="centered")
 
-# --- ẨN GIAO DIỆN MẶC ĐỊNH CỦA STREAMLIT (Nút Fork, Menu, Footer) ---
+# --- CSS MẠNH HƠN ĐỂ ẨN TOÀN BỘ GIAO DIỆN THỪA ---
 hide_streamlit_style = """
             <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
+            /* Ẩn menu chính và header trên cùng */
+            #MainMenu {visibility: hidden !important;}
+            header {visibility: hidden !important;}
+            
+            /* Ẩn footer chung */
+            footer {visibility: hidden !important;}
+            
+            /* Ẩn cụ thể thanh công cụ toolbar ở dưới cùng (chứa logo và nút manage) */
+            [data-testid="stToolbar"] {
+                visibility: hidden !important;
+                display: none !important;
+            }
+            
+            /* Ẩn các widget trạng thái khác nếu có */
+            .stStatusWidget {visibility: hidden !important;}
+            .stDeployButton {visibility: hidden !important;}
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -22,6 +35,8 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
+    # Nếu chạy local mà chưa cấu hình, có thể bỏ comment dòng dưới để test tạm
+    # API_KEY = "DÁN_KEY_VÀO_ĐÂY_NẾU_CHẠY_LOCAL" 
     st.error("Chưa thiết lập GOOGLE_API_KEY trong Secrets!")
     st.stop()
 
@@ -43,7 +58,6 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        # Lưu ý: Phiên bản đơn giản này không hiện lại ảnh/audio cũ khi F5
 
 if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -56,31 +70,23 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
             raw_text = response.text
             
             # --- XỬ LÝ LỌC BỎ TIẾNG ANH ---
-            # 1. Tìm tất cả các đoạn trong ngoặc [] để lấy làm lệnh vẽ tranh
             image_prompts = re.findall(r'\[(.*?)\]', raw_text)
             final_image_prompt = image_prompts[-1] if image_prompts else ""
-            
-            # 2. Xóa sạch các đoạn [...] khỏi văn bản hiển thị
             clean_text = re.sub(r'\[.*?\]', '', raw_text).strip()
 
         # --- HIỂN THỊ KẾT QUẢ ---
         with st.chat_message("assistant"):
-            # Chỉ hiện văn bản tiếng Việt sạch sẽ
             st.markdown(clean_text)
             
-            # Hiện ảnh minh họa
             if final_image_prompt:
                 st.markdown(f"**🖼️ Minh họa:**")
-                # Thêm tham số để ảnh nét hơn và không hiện logo Pollinations
                 st.image(f"https://image.pollinations.ai/prompt/{final_image_prompt.replace(' ', '%20')}?width=1024&height=768&nologo=true")
             
-            # Tạo giọng đọc (chỉ đọc phần tiếng Việt)
-            # Dùng tên file tạm thời để tránh lỗi cache trên server
+            # Tạo giọng đọc
             tts = gTTS(text=clean_text, lang='vi')
             tts.save("temp_audio.mp3")
             st.audio("temp_audio.mp3")
 
-        # Lưu vào lịch sử (Lưu bản sạch)
         st.session_state.messages.append({"role": "assistant", "content": clean_text})
         
     except Exception as e:

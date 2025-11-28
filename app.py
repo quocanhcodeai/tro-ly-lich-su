@@ -52,7 +52,7 @@ model = genai.GenerativeModel(
 )
 
 # --- GIAO DIỆN CHÍNH ---
-st.title("📜 Trợ Lý Lịch Sử 4.0")
+st.title("📜 Trợ Lý Lịch Sử")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -67,7 +67,7 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
         st.markdown(prompt)
 
     try:
-        with st.spinner("Thầy đang suy nghĩ và vẽ tranh..."):
+        with st.spinner("Thầy đang suy nghĩ..."):
             response = model.generate_content(prompt)
             raw_text = response.text
             
@@ -90,3 +90,4 @@ if prompt := st.chat_input("Hỏi thầy lịch sử điều gì?"):
         
     except Exception as e:
         st.error(f"Có lỗi xảy ra: {e}")
+
